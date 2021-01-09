@@ -16,8 +16,8 @@
 
 param (
     [string] $PoliciesPath = ".\Policies",
-    [string] $BlacklistsPath = ".\Blacklists",
-    [string] $DefaultBlacklist = "Default",
+    [string] $TemplatesPath = ".\Templates",
+    [string] $DefaultTemplate = "Default",
     [string] $HostsPath = "C:\Windows\System32\drivers\etc\hosts",
     [bool] $Debug = $false
 )
@@ -64,18 +64,18 @@ function Assert-LocalUserName
     }
 }
 
-function Assert-BlacklistPolicy
+function Assert-PolicyTemplate
 {
     param (
         [string] $PolicyName,
-        [string] $BlacklistsPath
+        [string] $TemplatesPath
     )
 
-    $BlacklistFilePath = (Join-Path -Path $BlacklistsPath -ChildPath $PolicyName) | Resolve-Path
-    $BlacklistFileExists = Test-Path -Path $BlacklistFilePath -PathType Leaf
-    if (!$BlacklistFileExists)
+    $TemplateFilePath = (Join-Path -Path $TemplatesPath -ChildPath $PolicyName) | Resolve-Path
+    $TemplateFileExists = Test-Path -Path $TemplateFilePath -PathType Leaf
+    if (!$TemplateFileExists)
     {
-        Invoke-Exception "Blacklist file for the policy '$PolicyName' was not found. Check blacklist files and make sure their names correspond to policy filenames (without the file extension part)."
+        Invoke-Exception "Template file for the policy '$PolicyName' was not found. Check template files and make sure their names correspond to policy filenames (without the file extension part)."
     }
 }
 
@@ -89,7 +89,7 @@ $ErrorActionPreference = "Stop"
 $PSScriptRunPath = Get-Location
 Set-Location -Path $PSScriptRoot
 
-Assert-BlacklistPolicy -PolicyName $DefaultBlacklist -BlacklistsPath $BlacklistsPath
+Assert-PolicyTemplate -PolicyName $DefaultTemplate -TemplatesPath $TemplatesPath
 
 $CurrentUser = Get-LocalUser -SID ([System.Security.Principal.WindowsIdentity]::GetCurrent().User)
 $MatchedUser = $null
@@ -105,7 +105,7 @@ foreach ($PolicyFile in $PoliciesFiles)
     $Policy.Name = (Get-Item -Path $PolicyFilePath).BaseName
     $Policy.Path = $PolicyFilePath
 
-    Assert-BlacklistPolicy -PolicyName $Policy.Name -BlacklistsPath $BlacklistsPath
+    Assert-PolicyTemplate -PolicyName $Policy.Name -TemplatesPath $TemplatesPath
 
     $UserNamesList = Get-Content -Path $PolicyFilePath
     foreach ($UserName in $UserNamesList)
@@ -141,15 +141,15 @@ foreach ($PolicyFile in $PoliciesFiles)
     }
 }
 
-$MatchedPolicyName = if (!$MatchedUser) { $DefaultBlacklist } else { $MatchedUser.Policy.Name }
-$BlacklistPath = (Join-Path -Path $BlacklistsPath -ChildPath $MatchedPolicyName) | Resolve-Path
+$MatchedPolicyName = if (!$MatchedUser) { $DefaultTemplate } else { $MatchedUser.Policy.Name }
+$TemplatePath = (Join-Path -Path $TemplatesPath -ChildPath $MatchedPolicyName) | Resolve-Path
 
 Write-Debug "Current user name: $($CurrentUser.Name)"
 Write-Debug "Matched policy name: $MatchedPolicyName"
-Write-Debug "Blacklist path: $BlacklistPath"
+Write-Debug "Template path: $TemplatePath"
 Write-Debug "Hosts path: $HostsPath"
 
-if ($Debug) { Copy-Item -Path $BlacklistPath -Destination $HostsPath -WhatIf }
-else { Copy-Item -Path $BlacklistPath -Destination $HostsPath }
+if ($Debug) { Copy-Item -Path $TemplatePath -Destination $HostsPath -WhatIf }
+else { Copy-Item -Path $TemplatePath -Destination $HostsPath }
 
 Set-Location -Path $PSScriptRunPath

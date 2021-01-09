@@ -141,7 +141,7 @@ foreach ($PolicyFile in $PoliciesFiles)
     }
 }
 
-$MatchedPolicyName = if (!$MatchedUser) { $DefaultTemplate } else { $MatchedUser.Policy.Name }
+$MatchedPolicyName = if ($MatchedUser) { $MatchedUser.Policy.Name } else { $DefaultTemplate }
 $TemplatePath = (Join-Path -Path $TemplatesPath -ChildPath $MatchedPolicyName) | Resolve-Path
 
 Write-Debug "Current user name: $($CurrentUser.Name)"

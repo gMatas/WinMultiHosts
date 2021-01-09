@@ -18,7 +18,7 @@ param (
     [string] $PoliciesPath = ".\Policies",
     [string] $BlacklistsPath = ".\Blacklists",
     [string] $DefaultBlacklist = "Default",
-    [string] $HostsPath = "C:\Users\matas\OneDrive\Desktop\funapp\Test\hosts",
+    [string] $HostsPath = "C:\Windows\System32\drivers\etc\hosts",
     [bool] $Debug = $false
 )
 
